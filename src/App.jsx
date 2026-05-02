@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 
 const OTTAWA_CENTER = [38.6159, -95.2672];
 const MAX_DISTANCE_MILES = 10;
-const VAL_TOWN_ENDPOINT = 'https://YOUR-VAL-TOWN-ENDPOINT-HERE.web.val.run';
+const VAL_TOWN_ENDPOINT = import.meta.env.VITE_VAL_TOWN_ENDPOINT || 'https://YOUR-VAL-TOWN-ENDPOINT-HERE.web.val.run';
 
 const defaultPin = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
