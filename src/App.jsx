@@ -63,12 +63,17 @@ function App() {
   const [includeClosed, setIncludeClosed] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
-    street_address: '', city: 'Ottawa', state: 'KS', zip: '', name: '', lat: '', lng: ''
+    street_address: '', city: 'Ottawa', state: 'KS', zip: '', name: ''
   });
 
   const visibleSales = useMemo(
     () => sales.filter((s) => includeClosed || !s.is_closed),
     [sales, includeClosed]
+  );
+
+  const mappableSales = useMemo(
+    () => visibleSales.filter((i) => i.hasCoords && milesBetween(OTTAWA_CENTER, [i.lat, i.lng]) <= MAX_DISTANCE_MILES),
+    [visibleSales]
   );
 
   const fetchSales = async () => {
@@ -90,16 +95,11 @@ function App() {
             name: item.name ?? 'Garage Sale',
             lat,
             lng,
+            hasCoords: !Number.isNaN(lat) && !Number.isNaN(lng),
             is_closed: Boolean(item.is_closed)
           };
         })
-        .filter(
-          (i) =>
-            i.street_address &&
-            !Number.isNaN(i.lat) &&
-            !Number.isNaN(i.lng) &&
-            milesBetween(OTTAWA_CENTER, [i.lat, i.lng]) <= MAX_DISTANCE_MILES
-        );
+        .filter((i) => i.street_address);
 
       setSales(cleaned);
       setError('');
@@ -127,7 +127,7 @@ function App() {
       return;
     }
     setShowAdd(false);
-    setForm({ street_address: '', city: 'Ottawa', state: 'KS', zip: '', name: '', lat: '', lng: '' });
+    setForm({ street_address: '', city: 'Ottawa', state: 'KS', zip: '', name: '' });
     fetchSales();
   };
 
@@ -146,10 +146,10 @@ function App() {
   };
 
   return <main className="app-shell"><header className="header"><div><h1>Ottawa, KS Garage Sales</h1><p>Within 10 miles of Ottawa. Address-first display.</p></div><div className="controls"><label><input type="checkbox" checked={includeClosed} onChange={(e)=>setIncludeClosed(e.target.checked)} /> Show closed</label><div className="toggle"><button className={view==='map'?'active':''} onClick={()=>setView('map')}>Map</button><button className={view==='list'?'active':''} onClick={()=>setView('list')}>List</button></div></div></header>{loading&&<p className="status">Loading…</p>}{error&&<p className="status error">{error}</p>}
-  {!loading && !error && view==='map' && <section className="map-wrap"><MapContainer center={OTTAWA_CENTER} zoom={13} scrollWheelZoom className="map"><TileLayer attribution='&copy; OpenStreetMap &copy; CARTO' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/><Circle center={OTTAWA_CENTER} radius={MAX_DISTANCE_MILES*1609.34} pathOptions={{color:'#4f8cc9',fillColor:'#4f8cc9',fillOpacity:0.05}} />{visibleSales.map((sale)=><Marker key={sale.id} position={[sale.lat,sale.lng]} icon={defaultPin}><Popup><strong className="popup-address">{sale.address}</strong><br/><span>{sale.name}</span><br/><button onClick={()=>markClosed(sale.id,!sale.is_closed)}>{sale.is_closed?'Reopen':'Mark closed'}</button></Popup></Marker>)}<FitSalesBounds sales={visibleSales} /><ScaleControl position="bottomleft" imperial maxWidth={130} /></MapContainer></section>}
+  {!loading && !error && view==='map' && <section className="map-wrap">{mappableSales.length===0?<p className="status">No coordinates available yet. Switch to list view to browse all sales.</p>:<MapContainer center={OTTAWA_CENTER} zoom={13} scrollWheelZoom className="map"><TileLayer attribution='&copy; OpenStreetMap &copy; CARTO' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/><Circle center={OTTAWA_CENTER} radius={MAX_DISTANCE_MILES*1609.34} pathOptions={{color:'#4f8cc9',fillColor:'#4f8cc9',fillOpacity:0.05}} />{mappableSales.map((sale)=><Marker key={sale.id} position={[sale.lat,sale.lng]} icon={defaultPin}><Popup><strong className="popup-address">{sale.address}</strong><br/><span>{sale.name}</span><br/><button onClick={()=>markClosed(sale.id,!sale.is_closed)}>{sale.is_closed?'Reopen':'Mark closed'}</button></Popup></Marker>)}<FitSalesBounds sales={mappableSales} /><ScaleControl position="bottomleft" imperial maxWidth={130} /></MapContainer>}</section>}
   {!loading && !error && view==='list' && <section className="list-wrap"><ul>{visibleSales.map((sale)=><li key={sale.id} className={sale.is_closed?'closed':''}><h2>{sale.address}</h2><p className="sale-name">{sale.name}</p><button onClick={()=>markClosed(sale.id,!sale.is_closed)}>{sale.is_closed?'Reopen':'Mark closed'}</button></li>)}</ul></section>}
   <button className="fab" onClick={()=>setShowAdd(true)}>＋ Add sale</button>
-  {showAdd && <div className="modal-backdrop" onClick={()=>setShowAdd(false)}><form className="modal" onClick={(e)=>e.stopPropagation()} onSubmit={addSale}><h3>Post new sale</h3><input required placeholder="Street address" value={form.street_address} onChange={(e)=>setForm({...form, street_address:e.target.value})}/><div className="row"><input required placeholder="City" value={form.city} onChange={(e)=>setForm({...form, city:e.target.value})}/><input required placeholder="State" value={form.state} onChange={(e)=>setForm({...form, state:e.target.value})}/><input required placeholder="ZIP" value={form.zip} onChange={(e)=>setForm({...form, zip:e.target.value})}/></div><input placeholder="Name (optional)" value={form.name} onChange={(e)=>setForm({...form, name:e.target.value})}/><div className="row"><input required placeholder="Latitude" value={form.lat} onChange={(e)=>setForm({...form, lat:e.target.value})}/><input required placeholder="Longitude" value={form.lng} onChange={(e)=>setForm({...form, lng:e.target.value})}/></div><div className="row"><button type="submit">Submit</button><button type="button" onClick={()=>setShowAdd(false)}>Cancel</button></div></form></div>}
+  {showAdd && <div className="modal-backdrop" onClick={()=>setShowAdd(false)}><form className="modal" onClick={(e)=>e.stopPropagation()} onSubmit={addSale}><h3>Post new sale</h3><input required placeholder="Street address" value={form.street_address} onChange={(e)=>setForm({...form, street_address:e.target.value})}/><div className="row"><input required placeholder="City" value={form.city} onChange={(e)=>setForm({...form, city:e.target.value})}/><input required placeholder="State" value={form.state} onChange={(e)=>setForm({...form, state:e.target.value})}/><input required placeholder="ZIP" value={form.zip} onChange={(e)=>setForm({...form, zip:e.target.value})}/></div><input placeholder="Name (optional)" value={form.name} onChange={(e)=>setForm({...form, name:e.target.value})}/><div className="row"><button type="submit">Submit</button><button type="button" onClick={()=>setShowAdd(false)}>Cancel</button></div></form></div>}
 </main>;
 }
 
