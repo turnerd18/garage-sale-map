@@ -1,0 +1,22 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #1f2937; }
+body { margin: 0; background: #f3f4f6; }
+.app-shell { min-height: 100vh; max-width: 1200px; margin: 0 auto; padding: 1rem; position: relative; }
+.header { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+.controls { display:flex; gap:1rem; align-items:center; }
+.toggle button { border:1px solid #d1d5db; padding:.5rem 1rem; background:#fff; cursor:pointer; }
+.toggle .active { background:#2563eb; color:#fff; }
+.map-wrap { border-radius:12px; overflow:hidden; border:1px solid #d1d5db; }
+.map { height:70vh; min-height:480px; }
+.list-wrap ul { list-style:none; padding:0; margin:0; display:grid; gap:.75rem; }
+.list-wrap li { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:.75rem; }
+.list-wrap li.closed { opacity:.6; }
+h2 { margin:.1rem 0 .25rem; font-size:1.1rem; }
+.sale-name { margin:.1rem 0 .65rem; color:#374151; }
+.popup-address { font-size:1rem; }
+.fab { position:fixed; right:24px; bottom:24px; border-radius:999px; border:0; background:#1d4ed8; color:#fff; padding:.9rem 1rem; font-weight:700; box-shadow:0 10px 25px rgba(0,0,0,.2); cursor:pointer; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); display:grid; place-items:center; }
+.modal { width:min(560px,92vw); background:#fff; border-radius:12px; padding:1rem; display:grid; gap:.6rem; }
+.modal input { padding:.55rem; border:1px solid #d1d5db; border-radius:8px; }
+.row { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
+.row:last-child { grid-template-columns:repeat(2,1fr); }
+.status.error { color:#b91c1c; }
